@@ -1,19 +1,26 @@
-package com.developingforfun.authorization.configurations;
+package com.developingforfun.authorization.configuration;
+
+import static org.springframework.boot.autoconfigure.security.servlet.PathRequest.toH2Console;
+import static org.springframework.security.config.Customizer.withDefaults;
 
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
+import java.util.List;
+import java.util.UUID;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -31,31 +38,18 @@ import org.springframework.security.oauth2.server.authorization.settings.ClientS
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
-import java.util.List;
-import java.util.UUID;
-
-import static org.springframework.boot.autoconfigure.security.servlet.PathRequest.toH2Console;
-import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
   private static final String[] AUTH_WHITELIST = {
-      // Actuators
-      "/actuator/**",
-      "/health/**",
-      "/management/**",
+    // Actuators
+    "/actuator/**", "/health/**", "/management/**",
   };
 
   @Bean
@@ -64,47 +58,44 @@ public class SecurityConfig {
       throws Exception {
     OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
     http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
-        .oidc(withDefaults());  // Enable OpenID Connect 1.0
+        .oidc(withDefaults()); // Enable OpenID Connect 1.0
 
-    http.cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.configurationSource(
-        corsConfigurationSource()));
+    http.cors(
+        httpSecurityCorsConfigurer ->
+            httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource()));
 
     http
         // Redirect to the login page when not authenticated from the
         // authorization endpoint
-        .exceptionHandling((exceptions) -> exceptions
-            .defaultAuthenticationEntryPointFor(
-                new LoginUrlAuthenticationEntryPoint("/login"),
-                new MediaTypeRequestMatcher(MediaType.TEXT_HTML)
-            )
-        )
+        .exceptionHandling(
+            (exceptions) ->
+                exceptions.defaultAuthenticationEntryPointFor(
+                    new LoginUrlAuthenticationEntryPoint("/login"),
+                    new MediaTypeRequestMatcher(MediaType.TEXT_HTML)))
         // Accept access tokens for User Info and/or Client Registration
-        .oauth2ResourceServer((resourceServer) -> resourceServer
-            .jwt(withDefaults()));
+        .oauth2ResourceServer((resourceServer) -> resourceServer.jwt(withDefaults()));
 
     return http.build();
   }
 
   @Bean
   @Order(2)
-  public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
-      throws Exception {
+  public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
 
     http
         // disable frame options for h2-console
-        .headers((headers) ->
-            headers
-                .frameOptions(FrameOptionsConfig::disable)
-        )
+        .headers((headers) -> headers.frameOptions(FrameOptionsConfig::disable))
         // disable csrf for h2-console
-        .csrf(csrf -> csrf
-            .ignoringRequestMatchers(toH2Console())
-            .disable())
-        .authorizeHttpRequests((authorize) -> authorize
-            .requestMatchers(AUTH_WHITELIST).permitAll()
-            .requestMatchers(toH2Console()).permitAll()
-            .anyRequest().authenticated()
-        )
+        .csrf(csrf -> csrf.ignoringRequestMatchers(toH2Console()).disable())
+        .authorizeHttpRequests(
+            (authorize) ->
+                authorize
+                    .requestMatchers(AUTH_WHITELIST)
+                    .permitAll()
+                    .requestMatchers(toH2Console())
+                    .permitAll()
+                    .anyRequest()
+                    .authenticated())
         // Form login handles the redirect to the login page from the
         // authorization server filter chain
         .formLogin(withDefaults());
@@ -114,28 +105,30 @@ public class SecurityConfig {
 
   @Bean
   public UserDetailsService userDetailsService() {
-    UserDetails userDetails = User.withDefaultPasswordEncoder()
-        .username("user")
-        .password("password")
-        .roles("USER")
-        .build();
+    UserDetails userDetails =
+        User.withDefaultPasswordEncoder()
+            .username("user")
+            .password("password")
+            .roles("USER")
+            .build();
 
     return new InMemoryUserDetailsManager(userDetails);
   }
 
   @Bean
   public RegisteredClientRepository registeredClientRepository() {
-    RegisteredClient registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())
-        .clientId("swagger-client")
-        .clientSecret("{noop}secret")
-        .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
-        .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
-        .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
-        .redirectUri("http://localhost:8282/api")
-        .scope("swagger.read")
-        .scope("swagger.write")
-        .clientSettings(ClientSettings.builder().requireAuthorizationConsent(false).build())
-        .build();
+    RegisteredClient registeredClient =
+        RegisteredClient.withId(UUID.randomUUID().toString())
+            .clientId("swagger-client")
+            .clientSecret("{noop}secret")
+            .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+            .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
+            .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+            .redirectUri("http://localhost:8282/api")
+            .scope("swagger.read")
+            .scope("swagger.write")
+            .clientSettings(ClientSettings.builder().requireAuthorizationConsent(false).build())
+            .build();
 
     return new InMemoryRegisteredClientRepository(registeredClient);
   }
@@ -145,10 +138,11 @@ public class SecurityConfig {
     KeyPair keyPair = generateRsaKey();
     RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
     RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
-    RSAKey rsaKey = new RSAKey.Builder(publicKey)
-        .privateKey(privateKey)
-        .keyID(UUID.randomUUID().toString())
-        .build();
+    RSAKey rsaKey =
+        new RSAKey.Builder(publicKey)
+            .privateKey(privateKey)
+            .keyID(UUID.randomUUID().toString())
+            .build();
     JWKSet jwkSet = new JWKSet(rsaKey);
     return new ImmutableJWKSet<>(jwkSet);
   }
@@ -177,24 +171,27 @@ public class SecurityConfig {
 
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedMethods(List.of(
-        HttpMethod.GET.name(),
-        HttpMethod.PUT.name(),
-        HttpMethod.POST.name(),
-        HttpMethod.DELETE.name(),
-        HttpMethod.OPTIONS.name(),
-        HttpMethod.PATCH.name()));
+    configuration.setAllowedMethods(
+        List.of(
+            HttpMethod.GET.name(),
+            HttpMethod.PUT.name(),
+            HttpMethod.POST.name(),
+            HttpMethod.DELETE.name(),
+            HttpMethod.OPTIONS.name(),
+            HttpMethod.PATCH.name()));
 
-    configuration.setAllowedHeaders(List.of("Content-Type, api_key, " +
-        "X-Requested-With, " +
-        "Authorization, " +
-        "DNT,X-CustomHeader," +
-        "Keep-Alive,User-Agent," +
-        "X-Requested-With," +
-        "If-Modified-Since," +
-        "Cache-Control," +
-        "Content-Type," +
-        "Content-Range,Range"));
+    configuration.setAllowedHeaders(
+        List.of(
+            "Content-Type, api_key, "
+                + "X-Requested-With, "
+                + "Authorization, "
+                + "DNT,X-CustomHeader,"
+                + "Keep-Alive,User-Agent,"
+                + "X-Requested-With,"
+                + "If-Modified-Since,"
+                + "Cache-Control,"
+                + "Content-Type,"
+                + "Content-Range,Range"));
 
     configuration.setAllowedOrigins(List.of("*"));
     configuration.setAllowCredentials(true);
