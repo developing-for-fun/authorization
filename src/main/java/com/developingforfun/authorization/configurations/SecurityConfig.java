@@ -9,8 +9,15 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -21,8 +28,11 @@ import org.springframework.security.oauth2.server.authorization.config.annotatio
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -34,30 +44,43 @@ import java.security.interfaces.RSAPublicKey;
 import java.util.List;
 import java.util.UUID;
 
+import static org.springframework.boot.autoconfigure.security.servlet.PathRequest.toH2Console;
+import static org.springframework.security.config.Customizer.withDefaults;
+
 @Configuration
-public class SecurityConfiguration {
+@EnableWebSecurity
+public class SecurityConfig {
+
+  private static final String[] AUTH_WHITELIST = {
+      // Actuators
+      "/actuator/**",
+      "/health/**",
+      "/management/**",
+  };
 
   @Bean
   @Order(1)
   public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
       throws Exception {
     OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
-
     http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
-        .oidc(Customizer.withDefaults()); // Enable OpenID Connect 1.0
+        .oidc(withDefaults());  // Enable OpenID Connect 1.0
+
+    http.cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.configurationSource(
+        corsConfigurationSource()));
 
     http
-        .cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.configurationSource(
-            corsConfigurationSource()))
         // Redirect to the login page when not authenticated from the
         // authorization endpoint
         .exceptionHandling((exceptions) -> exceptions
-            .authenticationEntryPoint(
-                new LoginUrlAuthenticationEntryPoint("/login"))
+            .defaultAuthenticationEntryPointFor(
+                new LoginUrlAuthenticationEntryPoint("/login"),
+                new MediaTypeRequestMatcher(MediaType.TEXT_HTML)
+            )
         )
         // Accept access tokens for User Info and/or Client Registration
-        .oauth2ResourceServer((oauth2) -> oauth2
-            .jwt(Customizer.withDefaults()));
+        .oauth2ResourceServer((resourceServer) -> resourceServer
+            .jwt(withDefaults()));
 
     return http.build();
   }
@@ -66,15 +89,38 @@ public class SecurityConfiguration {
   @Order(2)
   public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
       throws Exception {
+
     http
+        // disable frame options for h2-console
+        .headers((headers) ->
+            headers
+                .frameOptions(FrameOptionsConfig::disable)
+        )
+        // disable csrf for h2-console
+        .csrf(csrf -> csrf
+            .ignoringRequestMatchers(toH2Console())
+            .disable())
         .authorizeHttpRequests((authorize) -> authorize
+            .requestMatchers(AUTH_WHITELIST).permitAll()
+            .requestMatchers(toH2Console()).permitAll()
             .anyRequest().authenticated()
         )
         // Form login handles the redirect to the login page from the
         // authorization server filter chain
-        .formLogin(Customizer.withDefaults());
+        .formLogin(withDefaults());
 
     return http.build();
+  }
+
+  @Bean
+  public UserDetailsService userDetailsService() {
+    UserDetails userDetails = User.withDefaultPasswordEncoder()
+        .username("user")
+        .password("password")
+        .roles("USER")
+        .build();
+
+    return new InMemoryUserDetailsManager(userDetails);
   }
 
   @Bean
@@ -128,7 +174,6 @@ public class SecurityConfiguration {
   public AuthorizationServerSettings authorizationServerSettings() {
     return AuthorizationServerSettings.builder().build();
   }
-
 
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
