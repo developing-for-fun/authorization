@@ -18,11 +18,11 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 @Entity
-@Table(name = "securityUser")
+@Table(name = "oauth2_user")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class SecurityUser {
+public class OAuth2User {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,10 +36,10 @@ public class SecurityUser {
 
   @ManyToMany(cascade = CascadeType.MERGE, fetch = FetchType.EAGER)
   @JoinTable(
-      name = "users_authorities",
+      name = "oauth2_users_authorities",
       joinColumns = {@JoinColumn(name = "USERS_ID", referencedColumnName = "ID")},
       inverseJoinColumns = {@JoinColumn(name = "AUTHORITIES_ID", referencedColumnName = "ID")})
-  private Set<Authority> authorities;
+  private Set<OAuth2Authority> authorities;
 
   private Boolean accountNonExpired;
   private Boolean accountNonLocked;

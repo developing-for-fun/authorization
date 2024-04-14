@@ -12,12 +12,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "authorizationConsent")
-@IdClass(AuthorizationConsent.AuthorizationConsentId.class)
+@Table(name = "oauth2_authorization_consent")
+@IdClass(OAuth2AuthorizationConsent.AuthorizationConsentId.class)
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AuthorizationConsent {
+public class OAuth2AuthorizationConsent {
 
   @Id private String registeredClientId;
   @Id private String principalName;

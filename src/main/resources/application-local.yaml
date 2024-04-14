@@ -4,3 +4,8 @@ spring:
     properties:
       hibernate:
         format_sql: true
+logging:
+  level:
+    com:
+      developingforfun:
+        authorization: DEBUG

@@ -2,7 +2,7 @@ spring:
   application:
     name: authorization
   datasource:
-    url: jdbc:h2:mem:db;;NON_KEYWORDS=authorization;INIT=CREATE SCHEMA IF NOT EXISTS auth
+    url: jdbc:h2:mem:db;;NON_KEYWORDS=authorization;INIT=CREATE SCHEMA IF NOT EXISTS oauth2
     username: sa
     password: password
     driverClassName: org.h2.Driver
@@ -14,10 +14,12 @@ spring:
     defer-datasource-initialization: true
     properties:
       hibernate:
-        default_schema: auth
+        default_schema: oauth2
   sql:
     init:
       mode: always
+      schema-locations: "classpath:db/schema.sql"
+      data-locations: "classpath:db/data.sql"
 management:
   endpoint:
     health:

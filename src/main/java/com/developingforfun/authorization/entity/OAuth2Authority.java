@@ -12,11 +12,11 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 @Entity
-@Table(name = "authority")
+@Table(name = "oauth2_authority")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Authority {
+public class OAuth2Authority {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

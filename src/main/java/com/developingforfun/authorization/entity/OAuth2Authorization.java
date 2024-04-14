@@ -11,11 +11,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "authorization")
+@Table(name = "oauth2_authorization")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Authorization {
+public class OAuth2Authorization {
 
   @Id @Column private String id;
   private String registeredClientId;
