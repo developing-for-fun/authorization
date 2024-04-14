@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
@@ -28,9 +29,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
+import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
-import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
@@ -116,7 +116,7 @@ public class SecurityConfig {
   }
 
   @Bean
-  public RegisteredClientRepository registeredClientRepository() {
+  public JdbcRegisteredClientRepository registeredClientRepository(JdbcTemplate jdbcTemplate) {
     RegisteredClient registeredClient =
         RegisteredClient.withId(UUID.randomUUID().toString())
             .clientId("swagger-client")
@@ -130,7 +130,12 @@ public class SecurityConfig {
             .clientSettings(ClientSettings.builder().requireAuthorizationConsent(false).build())
             .build();
 
-    return new InMemoryRegisteredClientRepository(registeredClient);
+    // Save registered client's in db as if in-memory
+    JdbcRegisteredClientRepository registeredClientRepository =
+        new JdbcRegisteredClientRepository(jdbcTemplate);
+    registeredClientRepository.save(registeredClient);
+
+    return registeredClientRepository;
   }
 
   @Bean
