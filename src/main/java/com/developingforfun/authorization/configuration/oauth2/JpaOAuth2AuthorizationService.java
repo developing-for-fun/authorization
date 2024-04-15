@@ -30,8 +30,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-@Service
 @Primary
+@Service
 public class JpaOAuth2AuthorizationService implements OAuth2AuthorizationService {
 
   private final OAuth2AuthorizationRepository OAuth2AuthorizationRepository;

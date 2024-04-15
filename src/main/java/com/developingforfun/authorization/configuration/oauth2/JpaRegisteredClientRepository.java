@@ -22,8 +22,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-@Service
 @Primary
+@Service
 public class JpaRegisteredClientRepository implements RegisteredClientRepository {
 
   private final OAuth2ClientRepository OAuth2ClientRepository;

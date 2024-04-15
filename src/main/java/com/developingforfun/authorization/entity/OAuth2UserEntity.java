@@ -34,11 +34,13 @@ public class OAuth2UserEntity {
 
   @NonNull private String password;
 
-  @ManyToMany(cascade = CascadeType.MERGE, fetch = FetchType.EAGER)
+  @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   @JoinTable(
       name = "oauth2_users_authorities",
       joinColumns = {@JoinColumn(name = "USERS_ID", referencedColumnName = "ID")},
-      inverseJoinColumns = {@JoinColumn(name = "AUTHORITIES_ID", referencedColumnName = "ID")})
+      inverseJoinColumns = {
+        @JoinColumn(name = "AUTHORITIES_ID", referencedColumnName = "AUTHORITY")
+      })
   private Set<OAuth2AuthorityEntity> authorities;
 
   private Boolean accountNonExpired;
