@@ -22,7 +22,7 @@ import lombok.NonNull;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class OAuth2User {
+public class OAuth2UserEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,7 +39,7 @@ public class OAuth2User {
       name = "oauth2_users_authorities",
       joinColumns = {@JoinColumn(name = "USERS_ID", referencedColumnName = "ID")},
       inverseJoinColumns = {@JoinColumn(name = "AUTHORITIES_ID", referencedColumnName = "ID")})
-  private Set<OAuth2Authority> authorities;
+  private Set<OAuth2AuthorityEntity> authorities;
 
   private Boolean accountNonExpired;
   private Boolean accountNonLocked;

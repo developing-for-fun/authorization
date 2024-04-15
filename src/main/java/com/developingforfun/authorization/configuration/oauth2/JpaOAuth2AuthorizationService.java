@@ -1,6 +1,6 @@
-package com.developingforfun.authorization.oauth2;
+package com.developingforfun.authorization.configuration.oauth2;
 
-import com.developingforfun.authorization.entity.OAuth2Authorization;
+import com.developingforfun.authorization.entity.OAuth2AuthorizationEntity;
 import com.developingforfun.authorization.repository.OAuth2AuthorizationRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.Module;
@@ -19,6 +19,7 @@ import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.security.oauth2.core.OAuth2Token;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
+import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationCode;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
@@ -52,34 +53,28 @@ public class JpaOAuth2AuthorizationService implements OAuth2AuthorizationService
   }
 
   @Override
-  public void save(
-      org.springframework.security.oauth2.server.authorization.OAuth2Authorization
-          OAuth2Authorization) {
+  public void save(OAuth2Authorization OAuth2Authorization) {
     Assert.notNull(OAuth2Authorization, "authorization cannot be null");
     this.OAuth2AuthorizationRepository.save(toEntity(OAuth2Authorization));
   }
 
   @Override
-  public void remove(
-      org.springframework.security.oauth2.server.authorization.OAuth2Authorization
-          OAuth2Authorization) {
+  public void remove(OAuth2Authorization OAuth2Authorization) {
     Assert.notNull(OAuth2Authorization, "authorization cannot be null");
     this.OAuth2AuthorizationRepository.deleteById(OAuth2Authorization.getId());
   }
 
   @Override
-  public org.springframework.security.oauth2.server.authorization.OAuth2Authorization findById(
-      String id) {
+  public OAuth2Authorization findById(String id) {
     Assert.hasText(id, "id cannot be empty");
     return this.OAuth2AuthorizationRepository.findById(id).map(this::toObject).orElse(null);
   }
 
   @Override
-  public org.springframework.security.oauth2.server.authorization.OAuth2Authorization findByToken(
-      String token, OAuth2TokenType tokenType) {
+  public OAuth2Authorization findByToken(String token, OAuth2TokenType tokenType) {
     Assert.hasText(token, "token cannot be empty");
 
-    Optional<OAuth2Authorization> result;
+    Optional<OAuth2AuthorizationEntity> result;
     if (tokenType == null) {
       result =
           this.OAuth2AuthorizationRepository
@@ -99,8 +94,7 @@ public class JpaOAuth2AuthorizationService implements OAuth2AuthorizationService
     return result.map(this::toObject).orElse(null);
   }
 
-  private org.springframework.security.oauth2.server.authorization.OAuth2Authorization toObject(
-      OAuth2Authorization entity) {
+  private OAuth2Authorization toObject(OAuth2AuthorizationEntity entity) {
     RegisteredClient registeredClient =
         this.registeredClientRepository.findById(entity.getRegisteredClientId());
     if (registeredClient == null) {
@@ -110,9 +104,8 @@ public class JpaOAuth2AuthorizationService implements OAuth2AuthorizationService
               + "' was not found in the RegisteredClientRepository.");
     }
 
-    org.springframework.security.oauth2.server.authorization.OAuth2Authorization.Builder builder =
-        org.springframework.security.oauth2.server.authorization.OAuth2Authorization
-            .withRegisteredClient(registeredClient)
+    OAuth2Authorization.Builder builder =
+        OAuth2Authorization.withRegisteredClient(registeredClient)
             .id(entity.getId())
             .principalName(entity.getPrincipalName())
             .authorizationGrantType(
@@ -170,10 +163,8 @@ public class JpaOAuth2AuthorizationService implements OAuth2AuthorizationService
     return builder.build();
   }
 
-  private OAuth2Authorization toEntity(
-      org.springframework.security.oauth2.server.authorization.OAuth2Authorization
-          OAuth2Authorization) {
-    OAuth2Authorization entity = new OAuth2Authorization();
+  private OAuth2AuthorizationEntity toEntity(OAuth2Authorization OAuth2Authorization) {
+    OAuth2AuthorizationEntity entity = new OAuth2AuthorizationEntity();
     entity.setId(OAuth2Authorization.getId());
     entity.setRegisteredClientId(OAuth2Authorization.getRegisteredClientId());
     entity.setPrincipalName(OAuth2Authorization.getPrincipalName());
@@ -183,9 +174,8 @@ public class JpaOAuth2AuthorizationService implements OAuth2AuthorizationService
     entity.setAttributes(writeMap(OAuth2Authorization.getAttributes()));
     entity.setState(OAuth2Authorization.getAttribute(OAuth2ParameterNames.STATE));
 
-    org.springframework.security.oauth2.server.authorization.OAuth2Authorization.Token<
-            OAuth2AuthorizationCode>
-        authorizationCode = OAuth2Authorization.getToken(OAuth2AuthorizationCode.class);
+    OAuth2Authorization.Token<OAuth2AuthorizationCode> authorizationCode =
+        OAuth2Authorization.getToken(OAuth2AuthorizationCode.class);
     setTokenValues(
         authorizationCode,
         entity::setAuthorizationCodeValue,
@@ -193,9 +183,8 @@ public class JpaOAuth2AuthorizationService implements OAuth2AuthorizationService
         entity::setAuthorizationCodeExpiresAt,
         entity::setAuthorizationCodeMetadata);
 
-    org.springframework.security.oauth2.server.authorization.OAuth2Authorization.Token<
-            OAuth2AccessToken>
-        accessToken = OAuth2Authorization.getToken(OAuth2AccessToken.class);
+    OAuth2Authorization.Token<OAuth2AccessToken> accessToken =
+        OAuth2Authorization.getToken(OAuth2AccessToken.class);
     setTokenValues(
         accessToken,
         entity::setAccessTokenValue,
@@ -207,9 +196,8 @@ public class JpaOAuth2AuthorizationService implements OAuth2AuthorizationService
           StringUtils.collectionToDelimitedString(accessToken.getToken().getScopes(), ","));
     }
 
-    org.springframework.security.oauth2.server.authorization.OAuth2Authorization.Token<
-            OAuth2RefreshToken>
-        refreshToken = OAuth2Authorization.getToken(OAuth2RefreshToken.class);
+    OAuth2Authorization.Token<OAuth2RefreshToken> refreshToken =
+        OAuth2Authorization.getToken(OAuth2RefreshToken.class);
     setTokenValues(
         refreshToken,
         entity::setRefreshTokenValue,
@@ -217,8 +205,8 @@ public class JpaOAuth2AuthorizationService implements OAuth2AuthorizationService
         entity::setRefreshTokenExpiresAt,
         entity::setRefreshTokenMetadata);
 
-    org.springframework.security.oauth2.server.authorization.OAuth2Authorization.Token<OidcIdToken>
-        oidcIdToken = OAuth2Authorization.getToken(OidcIdToken.class);
+    OAuth2Authorization.Token<OidcIdToken> oidcIdToken =
+        OAuth2Authorization.getToken(OidcIdToken.class);
     setTokenValues(
         oidcIdToken,
         entity::setOidcIdTokenValue,
@@ -233,7 +221,7 @@ public class JpaOAuth2AuthorizationService implements OAuth2AuthorizationService
   }
 
   private void setTokenValues(
-      org.springframework.security.oauth2.server.authorization.OAuth2Authorization.Token<?> token,
+      OAuth2Authorization.Token<?> token,
       Consumer<String> tokenValueConsumer,
       Consumer<Instant> issuedAtConsumer,
       Consumer<Instant> expiresAtConsumer,

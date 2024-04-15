@@ -1,9 +1,9 @@
 package com.developingforfun.authorization.repository;
 
-import com.developingforfun.authorization.entity.OAuth2User;
+import com.developingforfun.authorization.entity.OAuth2UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface OAuth2UserRepository extends JpaRepository<OAuth2User, Integer> {
+public interface OAuth2UserRepository extends JpaRepository<OAuth2UserEntity, Integer> {
 
-  OAuth2User findByUsername(String username);
+  OAuth2UserEntity findByUsername(String username);
 }

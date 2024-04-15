@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class OAuth2Authorization {
+public class OAuth2AuthorizationEntity {
 
   @Id @Column private String id;
   private String registeredClientId;

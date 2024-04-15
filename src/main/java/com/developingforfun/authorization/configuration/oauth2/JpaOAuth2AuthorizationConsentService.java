@@ -1,6 +1,6 @@
-package com.developingforfun.authorization.oauth2;
+package com.developingforfun.authorization.configuration.oauth2;
 
-import com.developingforfun.authorization.entity.OAuth2AuthorizationConsent;
+import com.developingforfun.authorization.entity.OAuth2AuthorizationConsentEntity;
 import com.developingforfun.authorization.repository.OAuth2AuthorizationConsentRepository;
 import java.util.HashSet;
 import java.util.Set;
@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsent;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
@@ -33,17 +34,13 @@ public class JpaOAuth2AuthorizationConsentService implements OAuth2Authorization
   }
 
   @Override
-  public void save(
-      org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsent
-          OAuth2AuthorizationConsent) {
+  public void save(OAuth2AuthorizationConsent OAuth2AuthorizationConsent) {
     Assert.notNull(OAuth2AuthorizationConsent, "authorizationConsent cannot be null");
     this.OAuth2AuthorizationConsentRepository.save(toEntity(OAuth2AuthorizationConsent));
   }
 
   @Override
-  public void remove(
-      org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsent
-          OAuth2AuthorizationConsent) {
+  public void remove(OAuth2AuthorizationConsent OAuth2AuthorizationConsent) {
     Assert.notNull(OAuth2AuthorizationConsent, "authorizationConsent cannot be null");
     this.OAuth2AuthorizationConsentRepository.deleteByRegisteredClientIdAndPrincipalName(
         OAuth2AuthorizationConsent.getRegisteredClientId(),
@@ -62,8 +59,8 @@ public class JpaOAuth2AuthorizationConsentService implements OAuth2Authorization
   }
 
   private org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsent
-      toObject(OAuth2AuthorizationConsent OAuth2AuthorizationConsent) {
-    String registeredClientId = OAuth2AuthorizationConsent.getRegisteredClientId();
+      toObject(OAuth2AuthorizationConsentEntity OAuth2AuthorizationConsentEntity) {
+    String registeredClientId = OAuth2AuthorizationConsentEntity.getRegisteredClientId();
     RegisteredClient registeredClient =
         this.registeredClientRepository.findById(registeredClientId);
     if (registeredClient == null) {
@@ -76,10 +73,10 @@ public class JpaOAuth2AuthorizationConsentService implements OAuth2Authorization
     org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsent.Builder
         builder =
             org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsent
-                .withId(registeredClientId, OAuth2AuthorizationConsent.getPrincipalName());
-    if (OAuth2AuthorizationConsent.getAuthorities() != null) {
+                .withId(registeredClientId, OAuth2AuthorizationConsentEntity.getPrincipalName());
+    if (OAuth2AuthorizationConsentEntity.getAuthorities() != null) {
       for (String authority :
-          StringUtils.commaDelimitedListToSet(OAuth2AuthorizationConsent.getAuthorities())) {
+          StringUtils.commaDelimitedListToSet(OAuth2AuthorizationConsentEntity.getAuthorities())) {
         builder.authority(new SimpleGrantedAuthority(authority));
       }
     }
@@ -87,10 +84,9 @@ public class JpaOAuth2AuthorizationConsentService implements OAuth2Authorization
     return builder.build();
   }
 
-  private OAuth2AuthorizationConsent toEntity(
-      org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsent
-          OAuth2AuthorizationConsent) {
-    OAuth2AuthorizationConsent entity = new OAuth2AuthorizationConsent();
+  private OAuth2AuthorizationConsentEntity toEntity(
+      OAuth2AuthorizationConsent OAuth2AuthorizationConsent) {
+    OAuth2AuthorizationConsentEntity entity = new OAuth2AuthorizationConsentEntity();
     entity.setRegisteredClientId(OAuth2AuthorizationConsent.getRegisteredClientId());
     entity.setPrincipalName(OAuth2AuthorizationConsent.getPrincipalName());
 

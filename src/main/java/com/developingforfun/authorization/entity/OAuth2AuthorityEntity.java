@@ -16,7 +16,7 @@ import lombok.NonNull;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class OAuth2Authority {
+public class OAuth2AuthorityEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

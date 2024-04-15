@@ -1,6 +1,6 @@
-package com.developingforfun.authorization.oauth2;
+package com.developingforfun.authorization.configuration.oauth2;
 
-import com.developingforfun.authorization.entity.OAuth2User;
+import com.developingforfun.authorization.entity.OAuth2UserEntity;
 import com.developingforfun.authorization.repository.OAuth2UserRepository;
 import java.util.Collection;
 import java.util.HashSet;
@@ -23,7 +23,7 @@ public class JpaUserDetailsManager implements UserDetailsManager {
 
   @Override
   public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-    OAuth2User user = OAuth2UserRepository.findByUsername(username);
+    OAuth2UserEntity user = OAuth2UserRepository.findByUsername(username);
     if (!user.getUsername().equals(username)) {
       throw new UsernameNotFoundException("Access Denied");
     }
@@ -54,10 +54,7 @@ public class JpaUserDetailsManager implements UserDetailsManager {
 
   @Override
   public boolean userExists(String username) {
-    OAuth2User user = OAuth2UserRepository.findByUsername(username);
-    if (user.getUsername().equals(username)) {
-      return true;
-    }
-    return false;
+    OAuth2UserEntity user = OAuth2UserRepository.findByUsername(username);
+    return user.getUsername().equals(username);
   }
 }

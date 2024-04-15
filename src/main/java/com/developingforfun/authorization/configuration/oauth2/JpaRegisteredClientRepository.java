@@ -1,6 +1,6 @@
-package com.developingforfun.authorization.oauth2;
+package com.developingforfun.authorization.configuration.oauth2;
 
-import com.developingforfun.authorization.entity.OAuth2Client;
+import com.developingforfun.authorization.entity.OAuth2ClientEntity;
 import com.developingforfun.authorization.repository.OAuth2ClientRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.Module;
@@ -57,21 +57,22 @@ public class JpaRegisteredClientRepository implements RegisteredClientRepository
     return this.OAuth2ClientRepository.findByClientId(clientId).map(this::toObject).orElse(null);
   }
 
-  private RegisteredClient toObject(OAuth2Client OAuth2Client) {
+  private RegisteredClient toObject(OAuth2ClientEntity OAuth2ClientEntity) {
     Set<String> clientAuthenticationMethods =
-        StringUtils.commaDelimitedListToSet(OAuth2Client.getClientAuthenticationMethods());
+        StringUtils.commaDelimitedListToSet(OAuth2ClientEntity.getClientAuthenticationMethods());
     Set<String> authorizationGrantTypes =
-        StringUtils.commaDelimitedListToSet(OAuth2Client.getAuthorizationGrantTypes());
-    Set<String> redirectUris = StringUtils.commaDelimitedListToSet(OAuth2Client.getRedirectUris());
-    Set<String> clientScopes = StringUtils.commaDelimitedListToSet(OAuth2Client.getScopes());
+        StringUtils.commaDelimitedListToSet(OAuth2ClientEntity.getAuthorizationGrantTypes());
+    Set<String> redirectUris =
+        StringUtils.commaDelimitedListToSet(OAuth2ClientEntity.getRedirectUris());
+    Set<String> clientScopes = StringUtils.commaDelimitedListToSet(OAuth2ClientEntity.getScopes());
 
     RegisteredClient.Builder builder =
-        RegisteredClient.withId(OAuth2Client.getId())
-            .clientId(OAuth2Client.getClientId())
-            .clientIdIssuedAt(OAuth2Client.getClientIdIssuedAt())
-            .clientSecret(OAuth2Client.getClientSecret())
-            .clientSecretExpiresAt(OAuth2Client.getClientSecretExpiresAt())
-            .clientName(OAuth2Client.getClientName())
+        RegisteredClient.withId(OAuth2ClientEntity.getId())
+            .clientId(OAuth2ClientEntity.getClientId())
+            .clientIdIssuedAt(OAuth2ClientEntity.getClientIdIssuedAt())
+            .clientSecret(OAuth2ClientEntity.getClientSecret())
+            .clientSecretExpiresAt(OAuth2ClientEntity.getClientSecretExpiresAt())
+            .clientName(OAuth2ClientEntity.getClientName())
             .clientAuthenticationMethods(
                 authenticationMethods ->
                     clientAuthenticationMethods.forEach(
@@ -85,16 +86,16 @@ public class JpaRegisteredClientRepository implements RegisteredClientRepository
             .redirectUris((uris) -> uris.addAll(redirectUris))
             .scopes((scopes) -> scopes.addAll(clientScopes));
 
-    Map<String, Object> clientSettingsMap = parseMap(OAuth2Client.getClientSettings());
+    Map<String, Object> clientSettingsMap = parseMap(OAuth2ClientEntity.getClientSettings());
     builder.clientSettings(ClientSettings.withSettings(clientSettingsMap).build());
 
-    Map<String, Object> tokenSettingsMap = parseMap(OAuth2Client.getTokenSettings());
+    Map<String, Object> tokenSettingsMap = parseMap(OAuth2ClientEntity.getTokenSettings());
     builder.tokenSettings(TokenSettings.withSettings(tokenSettingsMap).build());
 
     return builder.build();
   }
 
-  private OAuth2Client toEntity(RegisteredClient registeredClient) {
+  private OAuth2ClientEntity toEntity(RegisteredClient registeredClient) {
     List<String> clientAuthenticationMethods =
         new ArrayList<>(registeredClient.getClientAuthenticationMethods().size());
     registeredClient
@@ -111,7 +112,7 @@ public class JpaRegisteredClientRepository implements RegisteredClientRepository
             authorizationGrantType ->
                 authorizationGrantTypes.add(authorizationGrantType.getValue()));
 
-    OAuth2Client entity = new OAuth2Client();
+    OAuth2ClientEntity entity = new OAuth2ClientEntity();
     entity.setId(registeredClient.getId());
     entity.setClientId(registeredClient.getClientId());
     entity.setClientIdIssuedAt(registeredClient.getClientIdIssuedAt());
