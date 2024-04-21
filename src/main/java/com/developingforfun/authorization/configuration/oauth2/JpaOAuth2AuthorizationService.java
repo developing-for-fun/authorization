@@ -34,7 +34,7 @@ import org.springframework.util.StringUtils;
 @Service
 public class JpaOAuth2AuthorizationService implements OAuth2AuthorizationService {
 
-  private final OAuth2AuthorizationRepository OAuth2AuthorizationRepository;
+  private final OAuth2AuthorizationRepository oAuth2AuthorizationRepository;
   private final RegisteredClientRepository registeredClientRepository;
   private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -43,7 +43,7 @@ public class JpaOAuth2AuthorizationService implements OAuth2AuthorizationService
       RegisteredClientRepository registeredClientRepository) {
     Assert.notNull(OAuth2AuthorizationRepository, "authorizationRepository cannot be null");
     Assert.notNull(registeredClientRepository, "registeredClientRepository cannot be null");
-    this.OAuth2AuthorizationRepository = OAuth2AuthorizationRepository;
+    oAuth2AuthorizationRepository = OAuth2AuthorizationRepository;
     this.registeredClientRepository = registeredClientRepository;
 
     ClassLoader classLoader = JpaOAuth2AuthorizationService.class.getClassLoader();
@@ -55,19 +55,19 @@ public class JpaOAuth2AuthorizationService implements OAuth2AuthorizationService
   @Override
   public void save(OAuth2Authorization OAuth2Authorization) {
     Assert.notNull(OAuth2Authorization, "authorization cannot be null");
-    this.OAuth2AuthorizationRepository.save(toEntity(OAuth2Authorization));
+    oAuth2AuthorizationRepository.save(toEntity(OAuth2Authorization));
   }
 
   @Override
   public void remove(OAuth2Authorization OAuth2Authorization) {
     Assert.notNull(OAuth2Authorization, "authorization cannot be null");
-    this.OAuth2AuthorizationRepository.deleteById(OAuth2Authorization.getId());
+    oAuth2AuthorizationRepository.deleteById(OAuth2Authorization.getId());
   }
 
   @Override
   public OAuth2Authorization findById(String id) {
     Assert.hasText(id, "id cannot be empty");
-    return this.OAuth2AuthorizationRepository.findById(id).map(this::toObject).orElse(null);
+    return oAuth2AuthorizationRepository.findById(id).map(this::toObject).orElse(null);
   }
 
   @Override
@@ -77,16 +77,16 @@ public class JpaOAuth2AuthorizationService implements OAuth2AuthorizationService
     Optional<OAuth2AuthorizationEntity> result;
     if (tokenType == null) {
       result =
-          this.OAuth2AuthorizationRepository
+          oAuth2AuthorizationRepository
               .findByStateOrAuthorizationCodeValueOrAccessTokenValueOrRefreshTokenValue(token);
     } else if (OAuth2ParameterNames.STATE.equals(tokenType.getValue())) {
-      result = this.OAuth2AuthorizationRepository.findByState(token);
+      result = oAuth2AuthorizationRepository.findByState(token);
     } else if (OAuth2ParameterNames.CODE.equals(tokenType.getValue())) {
-      result = this.OAuth2AuthorizationRepository.findByAuthorizationCodeValue(token);
+      result = oAuth2AuthorizationRepository.findByAuthorizationCodeValue(token);
     } else if (OAuth2ParameterNames.ACCESS_TOKEN.equals(tokenType.getValue())) {
-      result = this.OAuth2AuthorizationRepository.findByAccessTokenValue(token);
+      result = oAuth2AuthorizationRepository.findByAccessTokenValue(token);
     } else if (OAuth2ParameterNames.REFRESH_TOKEN.equals(tokenType.getValue())) {
-      result = this.OAuth2AuthorizationRepository.findByRefreshTokenValue(token);
+      result = oAuth2AuthorizationRepository.findByRefreshTokenValue(token);
     } else {
       result = Optional.empty();
     }

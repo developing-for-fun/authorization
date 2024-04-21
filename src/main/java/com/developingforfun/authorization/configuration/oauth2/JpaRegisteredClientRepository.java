@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.jackson2.SecurityJackson2Modules;
@@ -26,12 +27,12 @@ import org.springframework.util.StringUtils;
 @Service
 public class JpaRegisteredClientRepository implements RegisteredClientRepository {
 
-  private final OAuth2ClientRepository OAuth2ClientRepository;
+  private final OAuth2ClientRepository oAuth2ClientRepository;
   private final ObjectMapper objectMapper = new ObjectMapper();
 
   public JpaRegisteredClientRepository(OAuth2ClientRepository OAuth2ClientRepository) {
     Assert.notNull(OAuth2ClientRepository, "clientRepository cannot be null");
-    this.OAuth2ClientRepository = OAuth2ClientRepository;
+    oAuth2ClientRepository = OAuth2ClientRepository;
 
     ClassLoader classLoader = JpaRegisteredClientRepository.class.getClassLoader();
     List<Module> securityModules = SecurityJackson2Modules.getModules(classLoader);
@@ -42,19 +43,19 @@ public class JpaRegisteredClientRepository implements RegisteredClientRepository
   @Override
   public void save(RegisteredClient registeredClient) {
     Assert.notNull(registeredClient, "registeredClient cannot be null");
-    this.OAuth2ClientRepository.save(toEntity(registeredClient));
+    oAuth2ClientRepository.save(toEntity(registeredClient));
   }
 
   @Override
   public RegisteredClient findById(String id) {
     Assert.hasText(id, "id cannot be empty");
-    return this.OAuth2ClientRepository.findById(id).map(this::toObject).orElse(null);
+    return oAuth2ClientRepository.findById(id).map(this::toObject).orElse(null);
   }
 
   @Override
   public RegisteredClient findByClientId(String clientId) {
     Assert.hasText(clientId, "clientId cannot be empty");
-    return this.OAuth2ClientRepository.findByClientId(clientId).map(this::toObject).orElse(null);
+    return oAuth2ClientRepository.findByClientId(clientId).map(this::toObject).orElse(null);
   }
 
   private RegisteredClient toObject(OAuth2ClientEntity OAuth2ClientEntity) {
@@ -128,6 +129,12 @@ public class JpaRegisteredClientRepository implements RegisteredClientRepository
     entity.setScopes(StringUtils.collectionToCommaDelimitedString(registeredClient.getScopes()));
     entity.setClientSettings(writeMap(registeredClient.getClientSettings().getSettings()));
     entity.setTokenSettings(writeMap(registeredClient.getTokenSettings().getSettings()));
+
+    // Sync up permissions if it already exists
+    Optional<OAuth2ClientEntity> optionalOAuth2ClientEntity =
+        oAuth2ClientRepository.findByClientId(registeredClient.getClientId());
+    optionalOAuth2ClientEntity.ifPresent(
+        oAuth2ClientEntity -> entity.setPermissions(oAuth2ClientEntity.getPermissions()));
 
     return entity;
   }

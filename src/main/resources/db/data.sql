@@ -1,3 +1,8 @@
+-- permissions
+insert into oauth2.oauth2_permission (permission) values ('SWAGGER_R');
+insert into oauth2.oauth2_permission (permission) values ('SWAGGER_W');
+
+-- client
 insert into
   oauth2.oauth2_client (
     authorization_grant_types,
@@ -29,6 +34,11 @@ values
     '6d165cb9-8f4d-4028-8936-239d31fc20a7'
   );
 
+-- client-permissions
+insert into oauth2.oauth2_client_permissions (oauth2client_entity_id,permissions_permission) values (select id from oauth2.oauth2_client where client_id = 'swagger-client', 'SWAGGER_R');
+insert into oauth2.oauth2_client_permissions (oauth2client_entity_id,permissions_permission) values (select id from oauth2.oauth2_client where client_id = 'swagger-client', 'SWAGGER_W');
+
+-- user
 insert into
   oauth2.oauth2_user (
     account_non_expired,

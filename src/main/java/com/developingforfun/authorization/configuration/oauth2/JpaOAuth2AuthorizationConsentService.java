@@ -20,7 +20,7 @@ import org.springframework.util.StringUtils;
 @Service
 public class JpaOAuth2AuthorizationConsentService implements OAuth2AuthorizationConsentService {
 
-  private final OAuth2AuthorizationConsentRepository OAuth2AuthorizationConsentRepository;
+  private final OAuth2AuthorizationConsentRepository oAuth2AuthorizationConsentRepository;
   private final RegisteredClientRepository registeredClientRepository;
 
   public JpaOAuth2AuthorizationConsentService(
@@ -29,20 +29,20 @@ public class JpaOAuth2AuthorizationConsentService implements OAuth2Authorization
     Assert.notNull(
         OAuth2AuthorizationConsentRepository, "authorizationConsentRepository cannot be null");
     Assert.notNull(registeredClientRepository, "registeredClientRepository cannot be null");
-    this.OAuth2AuthorizationConsentRepository = OAuth2AuthorizationConsentRepository;
+    oAuth2AuthorizationConsentRepository = OAuth2AuthorizationConsentRepository;
     this.registeredClientRepository = registeredClientRepository;
   }
 
   @Override
   public void save(OAuth2AuthorizationConsent OAuth2AuthorizationConsent) {
     Assert.notNull(OAuth2AuthorizationConsent, "authorizationConsent cannot be null");
-    this.OAuth2AuthorizationConsentRepository.save(toEntity(OAuth2AuthorizationConsent));
+    oAuth2AuthorizationConsentRepository.save(toEntity(OAuth2AuthorizationConsent));
   }
 
   @Override
   public void remove(OAuth2AuthorizationConsent OAuth2AuthorizationConsent) {
     Assert.notNull(OAuth2AuthorizationConsent, "authorizationConsent cannot be null");
-    this.OAuth2AuthorizationConsentRepository.deleteByRegisteredClientIdAndPrincipalName(
+    oAuth2AuthorizationConsentRepository.deleteByRegisteredClientIdAndPrincipalName(
         OAuth2AuthorizationConsent.getRegisteredClientId(),
         OAuth2AuthorizationConsent.getPrincipalName());
   }
@@ -52,8 +52,8 @@ public class JpaOAuth2AuthorizationConsentService implements OAuth2Authorization
       findById(String registeredClientId, String principalName) {
     Assert.hasText(registeredClientId, "registeredClientId cannot be empty");
     Assert.hasText(principalName, "principalName cannot be empty");
-    return this.OAuth2AuthorizationConsentRepository.findByRegisteredClientIdAndPrincipalName(
-            registeredClientId, principalName)
+    return oAuth2AuthorizationConsentRepository
+        .findByRegisteredClientIdAndPrincipalName(registeredClientId, principalName)
         .map(this::toObject)
         .orElse(null);
   }

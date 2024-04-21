@@ -33,9 +33,12 @@ public class JpaUserDetailsManager implements UserDetailsManager {
 
   private final OAuth2UserRepository oAuth2UserRepository;
 
+  // Don't put final
+  // If there is a custom manager bean, we will authenticate/un-authenticate user
+  // If not, we will skip authenticationManager
   private AuthenticationManager authenticationManager;
 
-  private SecurityContextHolderStrategy securityContextHolderStrategy =
+  private final SecurityContextHolderStrategy securityContextHolderStrategy =
       SecurityContextHolder.getContextHolderStrategy();
 
   @Override
