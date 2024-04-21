@@ -122,10 +122,11 @@ public class SecurityConfig {
             .getClaims()
             .claims(
                 (claims) -> {
-                  Optional<OAuth2ClientEntity> byClientId =
-                      oAuth2ClientRepository.findByClientId("swagger-client");
-                  if (byClientId.isPresent()) {
-                    OAuth2ClientEntity oAuth2ClientEntity = byClientId.get();
+                  Optional<OAuth2ClientEntity> optionalOAuth2ClientEntity =
+                      oAuth2ClientRepository.findByClientId(
+                          context.getRegisteredClient().getClientId());
+                  if (optionalOAuth2ClientEntity.isPresent()) {
+                    OAuth2ClientEntity oAuth2ClientEntity = optionalOAuth2ClientEntity.get();
                     claims.put("per", oAuth2ClientEntity.getPermissionList());
                   }
                 });
