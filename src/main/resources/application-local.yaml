@@ -9,3 +9,8 @@ logging:
     com:
       developingforfun:
         authorization: DEBUG
+security:
+  jwt:
+    keystore-file: server.jks
+    alias: server
+    keystore-password: password

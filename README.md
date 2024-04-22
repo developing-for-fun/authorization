@@ -31,3 +31,11 @@ Decoded auth jwt should be:
   "jti": "c9e81820-ea64-4297-90bc-e14784d2d474"
 }
 ```
+
+### Generate keystore
+
+Example
+
+```shell
+keytool -genkey -alias server -keyalg RSA -keysize 3072 -keystore src/main/resources/server.jks -keypass password -storepass password -dname "CN=developing-for-fun OU=developing-for-fun O=developing-for-fun L=Austin ST=Texas C=US"
+```
