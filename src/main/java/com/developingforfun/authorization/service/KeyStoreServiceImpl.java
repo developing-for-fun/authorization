@@ -36,6 +36,7 @@ public class KeyStoreServiceImpl implements KeyStoreService {
 
     // For local PoC; else throw error
     if (keyPair == null) {
+
       keyPair = generateRandomKeyPair();
     }
 
